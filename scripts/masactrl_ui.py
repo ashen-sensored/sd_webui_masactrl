@@ -15,7 +15,7 @@ import cv2
 import math
 
 
-from modules import devices, script_callbacks
+from modules import devices, script_callbacks, shared
 
 import modules.scripts as scripts
 from modules import shared
@@ -24,8 +24,10 @@ import gradio as gr
 import os
 
 from scripts.masactrl_controller import MasaController, MasaControllerMode
+from modules.script_callbacks import on_cfg_denoiser,CFGDenoiserParams
 
-masa_controller: Optional[MasaController] = None
+
+shared.masa_controller: Optional[MasaController] = None
 
 
 def update_script_args(p, value, arg_idx, script_class):
@@ -45,9 +47,8 @@ def update_script_args(p, value, arg_idx, script_class):
 class Script(scripts.Script):
 
     def __init__(self):
-        global masa_controller
-        if masa_controller is None:
-            masa_controller = MasaController(shared.sd_model.model.diffusion_model)
+        if shared.masa_controller is None:
+            shared.masa_controller = MasaController(shared.sd_model.model.diffusion_model)
         pass
         self.xyzgraph_hooked_axis_modes = []
         self.xyzgraph_apply_tracking_index = -1
@@ -57,6 +58,24 @@ class Script(scripts.Script):
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
+
+    def denoiser_callback(self, parms: CFGDenoiserParams):
+        # inform masacontroller about layout of cond and uncond embed, allowing pinpoint of foreground token related xattn map at runtime
+        if shared.masa_controller.mode == MasaControllerMode.IDLE:
+            return
+
+        # simulating ksampler cond preprocessing
+        tensor = parms.text_cond
+        uncond = parms.text_uncond
+
+        if tensor.shape[1] == uncond.shape[1]:  # embed chunk count matches, which means can fit in a single pass through unet
+            pass    # seems like masacontroller just need to log the first pass of each timestep since it's the only one that matters
+
+
+
+
+
+
 
 
 
@@ -72,16 +91,22 @@ class Script(scripts.Script):
                 mask_threshold = gr.Slider(label="Mask Threshold", minimum=0.0, maximum=1.0, value=0.1, step=0.01)
 
 
-            foreground_indexes_textbox = gr.Textbox(label="Foreground Indexes", value="2")
-            # calculate_masks_button = gr.Button(value="Calculate Masks")
 
-            # def calculate_masks_clicked(foreground_indexes):
-            #     foreground_indexes = int(foreground_indexes)
-            #     masa_controller.calculate_reconstruction_maps(foreground_indexes)
-            #
-            # calculate_masks_button.click(fn=calculate_masks_clicked, inputs=[foreground_indexes_textbox],outputs=None)
-            hook_xyzgraph_button = gr.Button(value="Hook XYZ Graph")
+            foreground_indexes_textbox = gr.Textbox(label="Foreground Indexes", value="2")
+
+
+            calculate_masks_button = gr.Button(value="Calculate Masks")
+
+            def calculate_masks_clicked():
+
+                shared.masa_controller.calculate_reconstruction_maps()
+
+            calculate_masks_button.click(fn=calculate_masks_clicked, inputs=None,outputs=None)
+
+
             xyzgraph_hooked_mode_textbox = gr.Textbox(label="XYZ Graph Hooked Mode List", value="2,1,2")
+
+            hook_xyzgraph_button = gr.Button(value="Hook XYZ Graph")
             def apply_prompt_with_masa(p, x, xs):
                 self.xyzgraph_apply_tracking_index += 1
 
@@ -129,10 +154,15 @@ class Script(scripts.Script):
 
 
     def process(self, p: StableDiffusionProcessing, *args, **kwargs):
-        masactrl_mode, masa_start_step, masa_start_layer, mask_threshold, foreground_indexes_textbox = args
+        if not hasattr(self, 'callbacks_added'):
+            on_cfg_denoiser(self.denoiser_callback)
+        masactrl_mode, masa_start_step, masa_start_layer, mask_threshold, foreground_indexes_text = args
+        foreground_indexes = [int(v) for v in foreground_indexes_text.split(",")]
+
+
         match masactrl_mode:
-            case MasaControllerMode.LOGGING | MasaControllerMode.RECON:
-                masa_controller.mode_init(masactrl_mode, int(masa_start_step), int(masa_start_layer), mask_threshold)
+            case MasaControllerMode.LOGGING | MasaControllerMode.RECON | MasaControllerMode.LOGRECON:
+                shared.masa_controller.mode_init(masactrl_mode, int(masa_start_step), int(masa_start_layer), mask_threshold, foreground_indexes)
             case MasaControllerMode.IDLE:
                 pass
 
@@ -147,7 +177,7 @@ class Script(scripts.Script):
     def postprocess(self, p, processed, *args):
         masactrl_mode, masa_start_step, masa_start_layer, mask_threshold, foreground_indexes_textbox = args
         match masactrl_mode:
-            case MasaControllerMode.LOGGING | MasaControllerMode.RECON:
-                masa_controller.mode_end(masactrl_mode, foreground_indexes_textbox)
+            case MasaControllerMode.LOGGING | MasaControllerMode.RECON | MasaControllerMode.LOGRECON:
+                shared.masa_controller.mode_end(masactrl_mode, foreground_indexes_textbox)
             case MasaControllerMode.IDLE:
                 pass

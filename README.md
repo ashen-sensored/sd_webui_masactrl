@@ -1,14 +1,9 @@
-# Implementation of Self Attention Guidance in webui
-https://arxiv.org/abs/2210.00939
+# Implementation of MasaCtrl in webui
+https://arxiv.org/abs/2304.08465
 
-For AUTOMATIC1111 webui:
-at commit 22bcc7be
 
-run the following command in root directory of webui:
-```
-git apply --ignore-whitespace extensions/sd_webui_SAG/0001-CFGDenoiser-and-script_callbacks-mod-for-SAG.patch
-```
 
-Demos with stealth pnginfo:
-![xyz_grid-0014-232592377.png](resources%2Fimg%2Fxyz_grid-0014-232592377.png)
-![xyz_grid-0001-232592377.png](resources%2Fimg%2Fxyz_grid-0001-232592377.png)
+![cover](./resources/img/xyz_grid-0010-1508457017.png)
+
+
+When your target forground keyword is the last token, corresponding token index can be found at the top right corner of positive prompt, (*/75)
