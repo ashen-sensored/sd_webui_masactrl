@@ -885,7 +885,7 @@ class MasaController:
         match mode:
             case MasaControllerMode.LOGGING:
                 self.logging_detach_all()
-
+                self.calculate_reconstruction_maps()
             case MasaControllerMode.RECON:
                 self.recon_detach_all()
             case MasaControllerMode.LOGRECON:
