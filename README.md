@@ -16,3 +16,6 @@ For example:
 
 ![exp1](./resources/img/exp1.png)
 ![exp2](./resources/img/exp2.png)
+
+## Prerequisites
+Python 3.10 or later
