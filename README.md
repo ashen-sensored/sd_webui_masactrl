@@ -14,7 +14,8 @@ When your target foreground keyword is the last token in positive prompt area, c
  
 For example:
 
-![exp1](./resources/img/exp1.png)
+![exp0](./resources/img/exp0.png)
+![exp1](./resources/img/exp1M.png)
 ![exp2](./resources/img/exp2.png)
 
 ## Prerequisites
