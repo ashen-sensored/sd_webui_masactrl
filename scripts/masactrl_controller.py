@@ -4,7 +4,7 @@ from __future__ import annotations
 import enum
 from inspect import isfunction
 
-from diffusers.utils import deprecate
+# from diffusers.utils import deprecate
 from ldm.modules.diffusionmodules.openaimodel import UNetModel
 import torch
 from ldm.util import default
@@ -81,15 +81,15 @@ class ProxyReconMasaSattn(object):
     # implementation from diffusers
     def prepare_attention_mask(self, attention_mask, target_length, batch_size=None, out_dim=3):
         if batch_size is None:
-            deprecate(
-                "batch_size=None",
-                "0.0.15",
-                (
-                    "Not passing the `batch_size` parameter to `prepare_attention_mask` can lead to incorrect"
-                    " attention mask preparation and is deprecated behavior. Please make sure to pass `batch_size` to"
-                    " `prepare_attention_mask` when preparing the attention_mask."
-                ),
-            )
+            # deprecate(
+            #     "batch_size=None",
+            #     "0.0.15",
+            #     (
+            #         "Not passing the `batch_size` parameter to `prepare_attention_mask` can lead to incorrect"
+            #         " attention mask preparation and is deprecated behavior. Please make sure to pass `batch_size` to"
+            #         " `prepare_attention_mask` when preparing the attention_mask."
+            #     ),
+            # )
             batch_size = 1
 
         head_size = self.heads
