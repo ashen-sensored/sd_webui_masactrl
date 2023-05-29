@@ -101,7 +101,7 @@ class Script(scripts.Script):
 
                 shared.masa_controller.calculate_reconstruction_maps()
 
-            calculate_masks_button.click(fn=calculate_masks_clicked, inputs=None,outputs=None
+            calculate_masks_button.click(fn=calculate_masks_clicked, inputs=None,outputs=None)
 
             reset_button = gr.Button(value="Reset")
 
