@@ -101,8 +101,17 @@ class Script(scripts.Script):
 
                 shared.masa_controller.calculate_reconstruction_maps()
 
-            calculate_masks_button.click(fn=calculate_masks_clicked, inputs=None,outputs=None)
+            calculate_masks_button.click(fn=calculate_masks_clicked, inputs=None,outputs=None
 
+            reset_button = gr.Button(value="Reset")
+
+            def reset(mode):
+                try:
+                    shared.masa_controller.mode_end(mode)
+                except:
+                    print("The mode you select is not the one you chose earlier. Please choose another one.")
+
+            reset_button.click(fn=reset, inputs=masactrl_mode,outputs=None)
 
             xyzgraph_hooked_mode_textbox = gr.Textbox(label="XYZ Graph Hooked Mode List", value="2,1,2")
 
